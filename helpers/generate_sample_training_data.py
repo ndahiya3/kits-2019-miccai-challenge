@@ -209,7 +209,7 @@ def extract_data(dset_ids_file, in_dir_path,
   for i in range(num_dsets_to_extract):
     curr_id = id_list[i]
     print("Extracting {}: {} of {}".format(curr_id, i+1, num_dsets_to_extract))
-    dicom_file = os.path.join(in_dir_path, curr_id + '.nrrd')
+    dicom_file = os.path.join(in_dir_path, curr_id + '_dicom.nrrd')
     mask_file  = os.path.join(in_dir_path, curr_id + '_seg_mask.nrrd')
 
     dicom_image_3d = sitk.ReadImage(dicom_file)
