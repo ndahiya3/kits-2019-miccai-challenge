@@ -1,0 +1,10 @@
+Extracting case_00103: 1 of 1
+	Dataset Size: (512, 512, 665)
+	Min image value:  -1024.0
+	Max image value:  3071.0
+	Extracted 665 frames
+Extracting case_00138: 1 of 1
+	Dataset Size: (512, 512, 76)
+	Min image value:  -1024.0
+	Max image value:  3071.0
+	Extracted 76 frames

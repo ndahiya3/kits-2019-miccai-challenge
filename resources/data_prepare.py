@@ -46,9 +46,9 @@ parser.add_argument("--valid_in_dir", help="Directory location of validation dat
 # Class labels
 
 
-parser.set_defaults(out_dir='individual_frame_data',
-                    train_dsets_num=350,
-                    valid_dsets_num=100,
+parser.set_defaults(out_dir='unet_tversky_1',
+                    train_dsets_num=1,
+                    valid_dsets_num=1,
                     classes_to_keep=[1,2],
                     train_ids_file='train_ids.txt',
                     valid_ids_file='valid_ids.txt',

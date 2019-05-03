@@ -32,7 +32,7 @@ def get_boundary(in_mask, num_volumes):
       2D array of indexes [one per row] of selected sub-volume centers
       on mask boundary.
   """
-  
+
   # Extract boundary of the input mask [binary XOR]
   connectivity_struc_elem = ndi.generate_binary_structure(3, 3)
   border = in_mask ^ ndi.binary_erosion(in_mask,
@@ -50,7 +50,7 @@ def get_subvolumes_centers(in_mask, num_volumes):
       2D array of indexes [one per row] of selected sub-volume centers
       on mask boundary.
   """
-  
+
   # Extract boundary of the input mask [binary XOR]
   connectivity_struc_elem = ndi.generate_binary_structure(3, 3)
   border = in_mask ^ ndi.binary_erosion(in_mask,
@@ -62,7 +62,7 @@ def get_subvolumes_centers(in_mask, num_volumes):
   selected_boundary_points = np.random.choice(boundary_indexes.shape[0], # return random row numbers
                                               num_volumes, replace=False)
   selected_boundary_indexes = boundary_indexes[selected_boundary_points]
-  
+
   return selected_boundary_indexes
 
 def get_subvolume_idx_ranges(curr_point, max_dim, desired_dims):
@@ -78,15 +78,15 @@ def get_subvolume_idx_ranges(curr_point, max_dim, desired_dims):
   """
   min_idx = curr_point - (desired_dims//2 - 1)
   max_idx = curr_point + (desired_dims//2 + 1)
-  
+
   if min_idx < 0: # Shift right
     max_idx += np.abs(min_idx)
     min_idx = 0
-    
+
   if max_idx > max_dim: # Shift left
     min_idx -= max_idx - max_dim
     max_idx = max_dim
-  
+
   return (min_idx, max_idx)
 
 def extract_3d_subvolumes(dset_ids_file, in_dir_path, out_dicom_dir,
@@ -119,7 +119,7 @@ def extract_3d_subvolumes(dset_ids_file, in_dir_path, out_dicom_dir,
     print("Number of datasets to extract more than available. Extracting all."
           "available")
     num_dsets_to_extract = len(id_list)
-  
+
   for i in range(num_dsets_to_extract):
     curr_id = id_list[i]
     print("Sampling subvolumes {}: {} of {}".format(curr_id, i+1, num_dsets_to_extract))
@@ -135,7 +135,7 @@ def extract_3d_subvolumes(dset_ids_file, in_dir_path, out_dicom_dir,
     np_arr_mask = np.zeros_like(np_arr_mask_orig)
     # Keep desired class
     np_arr_mask[np.where(np_arr_mask_orig == int(class_to_keep))] = 1
-    
+
     # Extract and save sub-volumes
     subvolume_centers = get_subvolumes_centers(np_arr_mask, num_subvolumes_to_extract)
     dims = np_arr_dicom.shape
@@ -144,7 +144,7 @@ def extract_3d_subvolumes(dset_ids_file, in_dir_path, out_dicom_dir,
       z_min, z_max = get_subvolume_idx_ranges(center[0], dims[0], desired_dims[0])
       y_min, y_max = get_subvolume_idx_ranges(center[1], dims[1], desired_dims[1])
       x_min, x_max = get_subvolume_idx_ranges(center[2], dims[2], desired_dims[2])
-      
+
       subvolume_dims = (z_max-z_min, y_max-y_min, x_max-x_min)
       if (subvolume_dims != desired_dims):
         print("skipping")
@@ -152,19 +152,19 @@ def extract_3d_subvolumes(dset_ids_file, in_dir_path, out_dicom_dir,
       # Get dicom and mask subvolumes
       dicom_subvolume = np_arr_dicom[z_min:z_max, y_min:y_max, x_min:x_max]
       mask_subvolume  = np_arr_mask[z_min:z_max, y_min:y_max, x_min:x_max]
-      
+
       # Save dicom and mask subvolumes
       dicom_subvolume_itk = sitk.GetImageFromArray(dicom_subvolume)
       mask_subvolume_itk  = sitk.GetImageFromArray(mask_subvolume)
-      
+
       curr_dicom_path = os.path.join(out_dicom_dir, curr_id + '.{}'.format(idx) + '.nrrd')
       curr_mask_path  = os.path.join(out_masks_dir, curr_id + '.{}'.format(idx) + '.nrrd')
-      
+
       sitk.WriteImage(dicom_subvolume_itk, curr_dicom_path)
       sitk.WriteImage(mask_subvolume_itk, curr_mask_path)
-      
+
       idx += 1
-      
+
 def point2str(point, precision=2):
   """
   Format a point for printing
@@ -197,7 +197,7 @@ def extract_data(dset_ids_file, in_dir_path,
                   whole knee as foreground
   extract_only_with_foreground : boolean
                                  Extract only frames which have some foreground
-              
+
   """
 
   id_list = get_dataset_ids(dset_ids_file, num_dsets_to_extract)
@@ -205,7 +205,7 @@ def extract_data(dset_ids_file, in_dir_path,
     print("Number of datasets to extract more than available. Extracting all."
           "available")
     num_dsets_to_extract = len(id_list)
-  
+
   for i in range(num_dsets_to_extract):
     curr_id = id_list[i]
     print("Extracting {}: {} of {}".format(curr_id, i+1, num_dsets_to_extract))
@@ -231,27 +231,27 @@ def extract_data(dset_ids_file, in_dir_path,
     print('\tDataset Size:', np_arr_dicom.shape)
     print('\tMin image value: ', min_val)
     print('\tMax image value: ', np_arr_dicom.max())
-    
+
     # Extra prep for SN Data
     if min_val < 0:
       np_arr_dicom = np_arr_dicom - min_val # Shift data to make min == 0
     np_arr_dicom = np_arr_dicom.astype(np.uint16) # Signed int16 to uint
-    
+
     # Save individual dicom and mask frames
     extracted_frames = 0
-    for frame in range(np_arr_dicom.shape[0]):
+    for frame in range(np_arr_dicom.shape[2]):
         curr_dicom_frame_path = os.path.join(out_dicom_dir, curr_id + '.{}'.format(frame) + '.png')
         curr_mask_frame_path  = os.path.join(out_masks_dir, curr_id + '.{}'.format(frame) + '.png')
 
         #print(curr_dicom_frame_path, curr_mask_frame_path)
-        nnz = np.count_nonzero(np_arr_mask[frame,:,:])
+        nnz = np.count_nonzero(np_arr_mask[:,:,frame])
         if extract_only_with_foreground == True:
           if nnz != 0:
-            cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[frame,:,:])
-            cv2.imwrite(curr_mask_frame_path, np_arr_mask[frame,:,:])
+            cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[:,:,frame])
+            cv2.imwrite(curr_mask_frame_path, np_arr_mask[:,:,frame])
             extracted_frames += 1
         else:
-          cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[frame,:,:])
-          cv2.imwrite(curr_mask_frame_path, np_arr_mask[frame,:,:])
+          cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[:,:,frame].T)
+          cv2.imwrite(curr_mask_frame_path, np_arr_mask[:,:,frame].T)
           extracted_frames += 1
     print("\tExtracted {} frames".format(extracted_frames))
