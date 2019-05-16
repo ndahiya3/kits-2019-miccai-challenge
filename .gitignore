@@ -1,0 +1,11 @@
+*.hdf5
+*.nrrd
+*.mhd
+*.raw
+*.pyc
+*.csv
+*.pdf
+*.odt
+*.nii
+.ipynb_checkpoints
+.spyproject
