@@ -202,10 +202,11 @@ def extract_data(dset_ids_file, in_dir_path,
 
   id_list = get_dataset_ids(dset_ids_file, num_dsets_to_extract)
   if num_dsets_to_extract > len(id_list):
-    print("Number of datasets to extract more than available. Extracting all."
+    print("Number of datasets to extract more than available. Extracting all "
           "available")
     num_dsets_to_extract = len(id_list)
 
+  dset_stats_file = open('dsets_stats_file.txt','a+')
   for i in range(num_dsets_to_extract):
     curr_id = id_list[i]
     print("Extracting {}: {} of {}".format(curr_id, i+1, num_dsets_to_extract))
@@ -239,19 +240,25 @@ def extract_data(dset_ids_file, in_dir_path,
 
     # Save individual dicom and mask frames
     extracted_frames = 0
+    nnz_frames = 0 # Number of frames with non-blank mask
     for frame in range(np_arr_dicom.shape[2]):
         curr_dicom_frame_path = os.path.join(out_dicom_dir, curr_id + '.{}'.format(frame) + '.png')
         curr_mask_frame_path  = os.path.join(out_masks_dir, curr_id + '.{}'.format(frame) + '.png')
 
         #print(curr_dicom_frame_path, curr_mask_frame_path)
         nnz = np.count_nonzero(np_arr_mask[:,:,frame])
+        if nnz > 0:
+          nnz_frames += 1
         if extract_only_with_foreground == True:
           if nnz != 0:
-            cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[:,:,frame])
-            cv2.imwrite(curr_mask_frame_path, np_arr_mask[:,:,frame])
+            cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[:,:,frame].T)
+            cv2.imwrite(curr_mask_frame_path, np_arr_mask[:,:,frame].T)
             extracted_frames += 1
         else:
           cv2.imwrite(curr_dicom_frame_path, np_arr_dicom[:,:,frame].T)
           cv2.imwrite(curr_mask_frame_path, np_arr_mask[:,:,frame].T)
           extracted_frames += 1
     print("\tExtracted {} frames".format(extracted_frames))
+    print("{}: ({},{},{})\t {}/{}".format(curr_id, np_arr_dicom.shape[0],
+          np_arr_dicom.shape[1], np_arr_dicom.shape[2], nnz_frames, np_arr_dicom.shape[2]), file=dset_stats_file)
+  dset_stats_file.close()
