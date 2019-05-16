@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Create training data directory structure
+# Exp_Name_Base_Directory
+#   train
+#     dicoms
+#     masks
+#   valid
+#     dicoms
+#     masks
+#   test
+#     dicoms
+#     masks"
+dir_name=$1
+create_dir_struc () {
+    mkdir -p $dir_name
+    mkdir -p $dir_name/test
+    mkdir -p $dir_name/train
+    mkdir -p $dir_name/valid
+    mkdir -p $dir_name/test/dicoms
+    mkdir -p $dir_name/test/masks
+    mkdir -p $dir_name/train/dicoms
+    mkdir -p $dir_name/train/masks
+    mkdir -p $dir_name/valid/dicoms
+    mkdir -p $dir_name/valid/masks
+}
+if [ $# -lt 1 ]; then
+    echo "Provide atleast the experiment name to create directory structure."
+else
+    if [ $# -gt 1 ]; then
+        if [ -d $2 ]; then
+            dir_name="$2/$1"
+        else
+            echo "Base directory doesn't exist. Creating in current directory."
+        fi
+    fi
+    create_dir_struc
+fi
