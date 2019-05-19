@@ -79,7 +79,7 @@ def training_data_generator(train_path, dicom_folder, masks_folder,\
 
   dicom_generator = dicom_datagen.flow_from_directory(train_path,
                                     classes = [dicom_folder],
-                                    target_size=(512,512),
+                                    target_size=(256,256),
                                     color_mode='grayscale',
                                     class_mode=None,
                                     batch_size=batch_size,
@@ -87,14 +87,14 @@ def training_data_generator(train_path, dicom_folder, masks_folder,\
                                     seed=seed)
   masks_generator = masks_datagen.flow_from_directory(train_path,
                                     classes = [masks_folder],
-                                    target_size=(512,512),
+                                    target_size=(256,256),
                                     color_mode='grayscale',
                                     class_mode=None,
                                     batch_size=batch_size,
                                     seed=seed)
   train_generator = zip(dicom_generator, masks_generator)
   for (dicom, mask) in train_generator:
-    #dicom = scale_data(dicom)
+    dicom = scale_data(dicom)
     #print(dicom.shape, mask.shape)
     if (num_classes > 1):
       mask  = convert_masks_one_hot(mask, num_classes)
@@ -108,21 +108,21 @@ def validation_data_generator(valid_path, dicom_folder, masks_folder,
   seed = 1
   dicom_generator = dicom_datagen.flow_from_directory(valid_path,
                                     classes=[dicom_folder],
-                                    target_size=(512,512),
+                                    target_size=(256,256),
                                     color_mode='grayscale',
                                     class_mode=None,
                                     batch_size=batch_size,
                                     seed=seed)
   masks_generator = masks_datagen.flow_from_directory(valid_path,
                                     classes=[masks_folder],
-                                    target_size=(512,512),
+                                    target_size=(256,256),
                                     color_mode='grayscale',
                                     class_mode=None,
                                     batch_size=batch_size,
                                     seed=seed)
   valid_generator = zip(dicom_generator, masks_generator)
   for (dicom, mask) in valid_generator:
-    #dicom = scale_data(dicom)
+    dicom = scale_data(dicom)
     if (num_classes > 1):
       mask  = convert_masks_one_hot(mask, num_classes)
     yield (dicom, mask)

@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(1, os.path.abspath('..'))
 from helpers.generate_sample_training_data import extract_data
+from helpers.generate_sample_training_data import extract_cropped_kidney_data
 
 parser = argparse.ArgumentParser(description="This program extracts individual slices for model training.")
 
@@ -38,15 +39,15 @@ parser.add_argument("--valid_in_dir", help="Directory location of validation dat
                     type=str)
 ###### ------ Use following to set defaults -------------- ######
 
-# Max training datasets   = 350
-# Max validation datasets = 100
-# Max testing datasets    = 251
-# Total = 701
+# Max training datasets   = 105
+# Max validation datasets = 31
+# Max testing datasets    = 74
+# Total = 210
 
 # Class labels
 
 
-parser.set_defaults(out_dir='unet_tversky_full',
+parser.set_defaults(out_dir='unet_tversky_full_cropped',
                     train_dsets_num=105,
                     valid_dsets_num=31,
                     classes_to_keep=[1,2],
@@ -67,7 +68,7 @@ valid_in_dir            = args.valid_in_dir
 convert_masks_to_binary = args.convert_masks_to_binary
 
 ###### ------TO DO: Add these to argument parser with defaults ----- ######
-extract_only_with_foreground = False
+extract_only_with_foreground = True
 
 val = subprocess.check_call("./create_train_dir_structure '%s'" % base_out_dir, shell=True)
 train_out_dicom_dir = os.path.join(base_out_dir, 'train/dicoms')
@@ -87,13 +88,20 @@ valid_out_masks_dir = os.path.abspath(valid_out_masks_dir)
 
 
 # Extract training data
-extract_data(train_ids_file, train_in_dir, train_out_dicom_dir,
+#extract_data(train_ids_file, train_in_dir, train_out_dicom_dir,
+#             train_out_masks_dir, train_dsets_to_extract,
+#             convert_masks_to_binary, classes_to_keep,
+#             extract_only_with_foreground)
+extract_cropped_kidney_data(train_ids_file, train_in_dir, train_out_dicom_dir,
              train_out_masks_dir, train_dsets_to_extract,
              convert_masks_to_binary, classes_to_keep,
              extract_only_with_foreground)
-
 # Extract validation data
-extract_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
+#extract_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
+#             valid_out_masks_dir, valid_dsets_to_extract,
+#             convert_masks_to_binary, classes_to_keep,
+#             extract_only_with_foreground)
+extract_cropped_kidney_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
              valid_out_masks_dir, valid_dsets_to_extract,
              convert_masks_to_binary, classes_to_keep,
              extract_only_with_foreground)

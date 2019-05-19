@@ -76,7 +76,8 @@ def train(train_dir, valid_dir, save_aug_dir, batch_size, model_save_path,
       valid_generator = validation_data_generator(valid_dir, 'dicoms', 'masks',
                                                   batch_size, num_classes)
     #model = unet_model_deeper_dilated_conv(pretrained_model_path, num_classes=num_classes)
-    model = unet_model_dilated_conv(pretrained_model_path, num_classes=num_classes)
+    model = unet_model_dilated_conv(pretrained_model_path, num_classes=num_classes,
+                                    input_size=(1,256,256))
   else:
     img_generator = data_generator_3d(train_dir, 'dicoms', 'masks', batch_size)
     valid_generator = None

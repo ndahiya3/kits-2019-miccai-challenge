@@ -20,7 +20,7 @@ parser.add_argument("--num_epochs", help="Number of training epochs to run.",
 parser.add_argument("--num_classes", help="Number of object classes.",
                     type=int)
 
-parser.set_defaults(curr_exp_name='tversky_full_lr_pt4',
+parser.set_defaults(curr_exp_name='unet_tversky_full_cropped_scaled',
                     batch_size=8,
                     num_epochs=50,
                     num_classes=3)
@@ -37,7 +37,7 @@ valid_images_dir = curr_experiment_name + '/valid'
 save_aug_images_dir = None
 
 model_save_name = 'unet_' + curr_experiment_name + '.hdf5'
-pretrained_checkpoint = 'unet_unet_tversky_full.hdf5' #'unet_knee_sn_3d_unet_test_tversky.hdf5'
+pretrained_checkpoint = None #'unet_knee_sn_3d_unet_test_tversky.hdf5'
 curr_log_dir = 'logs/' + curr_experiment_name
 csv_log_file = curr_experiment_name + '.csv'
 device = '/gpu:0'

@@ -22,6 +22,119 @@ import os
 from scipy import ndimage as ndi
 from .utilities import get_dataset_ids
 
+def extract_cropped_kidney_data(dset_ids_file, in_dir_path,
+                 out_dicom_dir, out_masks_dir, num_dsets_to_extract,
+                 convert_masks_to_binary=True,classes_to_keep=[],
+                 extract_only_with_foreground=False):
+  """
+  Function that actually extracts data.
+  Parameters
+  ----------
+  oai_ids_file : string
+                 Filename containing dataset ids to extract
+  in_dir_path : string
+                Directory containing *.nrrd format dicoms with corresp. masks
+  out_dicom_dir : string
+                  Directory to output dicom frames
+  out_masks_dir : string
+                  Directory to output masks frames
+  num_dsets_to_extract : integer
+                          Number of datasets to extract
+  convert_masks_to_binary : boolean
+                            Convert multi class label masks to 0/1
+  class_to_keep : integer
+                  convert multi class to binary keeping class_to_keep as
+                  foreground and rest as background. default = 0 is to keep
+                  whole knee as foreground
+  extract_only_with_foreground : boolean
+                                 Extract only frames which have some foreground
+
+  """
+
+  id_list = get_dataset_ids(dset_ids_file, num_dsets_to_extract)
+  if num_dsets_to_extract > len(id_list):
+    print("Number of datasets to extract more than available. Extracting all "
+          "available")
+    num_dsets_to_extract = len(id_list)
+
+  dset_stats_file = open('cropped_dsets_stats_file.txt','a+')
+  for i in range(num_dsets_to_extract):
+    curr_id = id_list[i]
+    print("Extracting {}: {} of {}".format(curr_id, i+1, num_dsets_to_extract))
+    dicom_file = os.path.join(in_dir_path, curr_id + '_dicom.nrrd')
+    mask_file  = os.path.join(in_dir_path, curr_id + '_seg_mask.nrrd')
+
+    dicom_image_3d = sitk.ReadImage(dicom_file)
+    mask_image_3d  = sitk.ReadImage(mask_file)
+
+    #print('DICOM size:\t', dicom_image_3d.GetSize())
+    np_arr_dicom = sitk.GetArrayFromImage(dicom_image_3d)
+    np_arr_mask_orig  = sitk.GetArrayFromImage(mask_image_3d)
+    np_arr_mask = np.zeros_like(np_arr_mask_orig)
+
+    if convert_masks_to_binary is True:
+      for class_to_keep in classes_to_keep:
+        np_arr_mask[np.where(np_arr_mask_orig == np.uint(class_to_keep))] = 1
+    else: # Classes to keep are saved with labels 1, 2, 3 ...
+      for idx, class_to_keep in enumerate(classes_to_keep):
+        np_arr_mask[np.where(np_arr_mask_orig == np.uint(class_to_keep))] = idx + 1
+
+    min_val = np_arr_dicom.min()
+    print('\tDataset Size:', np_arr_dicom.shape)
+    print('\tMin image value: ', min_val)
+    print('\tMax image value: ', np_arr_dicom.max())
+
+    # Extra prep for SN Data
+    if min_val < 0:
+      np_arr_dicom = np_arr_dicom - min_val # Shift data to make min == 0
+    np_arr_dicom = np_arr_dicom.astype(np.uint16) # Signed int16 to uint
+
+    # Save individual dicom and mask frames
+    extracted_frames = 0
+    nnz_frames = 0 # Number of frames with non-blank mask
+    foreground_only_idx = 0
+    nnz_mismatch = 0
+    for frame in range(np_arr_dicom.shape[2]):
+        curr_dicom_frame_path = os.path.join(out_dicom_dir, curr_id + '.{}'.format(frame) + '.png')
+        curr_mask_frame_path  = os.path.join(out_masks_dir, curr_id + '.{}'.format(frame) + '.png')
+
+        #print(curr_dicom_frame_path, curr_mask_frame_path)
+        nnz = np.count_nonzero(np_arr_mask[:,:,frame])
+        if nnz > 0:
+          nnz_frames += 1
+        if extract_only_with_foreground == True:
+          if nnz != 0:
+            curr_dicom_frame_path = os.path.join(out_dicom_dir, curr_id + '.{}'.format(foreground_only_idx) + '.png')
+            curr_mask_frame_path  = os.path.join(out_masks_dir, curr_id + '.{}'.format(foreground_only_idx) + '.png')
+            dicom_frame = crop_frame(np_arr_dicom[:,:,frame].T)
+            mask_frame  = crop_frame(np_arr_mask[:,:,frame].T)
+            cv2.imwrite(curr_dicom_frame_path, dicom_frame)
+            cv2.imwrite(curr_mask_frame_path, mask_frame)
+            extracted_frames += 1
+            foreground_only_idx += 1
+        else:
+          dicom_frame = crop_frame(np_arr_dicom[:,:,frame].T)
+          mask_frame  = crop_frame(np_arr_mask[:,:,frame].T)
+          cv2.imwrite(curr_dicom_frame_path, dicom_frame)
+          cv2.imwrite(curr_mask_frame_path, mask_frame)
+          nnz_cropped = np.count_nonzero(mask_frame)
+          if (nnz != nnz_cropped):
+            nnz_mismatch += 1
+          extracted_frames += 1
+    print("\tExtracted {} frames".format(extracted_frames))
+    print("{}: ({},{},{})\t {}/{}".format(curr_id, np_arr_dicom.shape[0],
+          np_arr_dicom.shape[1], np_arr_dicom.shape[2], nnz_mismatch, nnz_frames), file=dset_stats_file)
+  dset_stats_file.close()
+
+def crop_frame(frame):
+  """
+  Crop a kidney frame. Crop region is 256x256 around image center.
+  """
+  #cropped = frame[256-192:256+192,256-192:256+192]
+  cropped = frame[256-128+25:256+128+25,256-128:256+128]
+  #print(cropped.shape)
+  return cropped
+
 def get_boundary(in_mask, num_volumes):
   """
   Select desired number of locations on input mask boundary.

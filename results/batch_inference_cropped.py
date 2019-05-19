@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 22 13:07:33 2019
-Script to run inference using a trained model on a batch of testing sets.
+Created on Thu May 16 22:54:10 2019
+Script to run inference on Kidney data. The model is trained on cropped frames
+as kidney and tumor are very small compared to image size.
+Runs inference using a trained model on a batch of testing sets.
 Saves all predicted masks in '*_pred_mask.nrrd' format. In case of multiclass,
 labels are compressed to single file with 0 as background and 1,2,...,nb_classes
 as other class labels.
 
 Reads the test set id's from text file. Model to run's name is usually based
 on experiment name.
+@author: ndahiya
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 22 13:07:33 2019
+
 
 @author: ndahiya
 """
@@ -23,8 +33,23 @@ sys.path.insert(0, path.abspath('..'))
 import helpers.utilities as utils
 from models.unet_model_dilated_conv import unet_model_dilated_conv
 from models.unet_model_deeper_dilated_conv import unet_model_deeper_dilated_conv
+
+def crop_dataset(dataset):
+  """
+  Crop a kidney frame. Crop region is 256x256 around image center.
+  """
+  #cropped = frame[256-192:256+192,256-192:256+192]
+
+  frames = dataset.shape[0]
+  cropped_dataset = np.zeros((frames,256,256))
+  for frame in range(frames):
+    img = dataset[frame]
+    cropped_dataset[frame] = img[256-128+25:256+128+25,256-128:256+128]
+  #print(cropped.shape)
+  return cropped_dataset
+
 # Use this if running with default arguments
-exp_name_default="tversky_full_lr_pt4"
+exp_name_default="unet_tversky_full_cropped"
 
 parser = argparse.ArgumentParser(description="This script runs inference using "
                                  "a pretrained model on a set of "
@@ -81,7 +106,7 @@ model_name = path.abspath(model_name)
 with tf.device(device):
   #model = unet_model_tack_arch(model_name, num_classes=nb_classes)
   #model = unet_model_dilated_conv(model_name, num_classes=nb_classes)
-  model = unet_model_dilated_conv(model_name, num_classes=nb_classes)
+  model = unet_model_dilated_conv(model_name, num_classes=nb_classes, input_size=(1,256,256))
   #model.summary()
 
   # Predict and save all test datasets
@@ -99,14 +124,16 @@ with tf.device(device):
     num_frames = dicom_arr.shape[0]
     for idx in range(num_frames):
       dicom_arr[idx] = dicom_arr[idx].T
-    min_val = dicom_arr.min()
-    dicom_arr = dicom_arr - min_val
 
     dicom_shape = dicom_arr.shape
     if dicom_shape[1] != 512 or dicom_shape[2] != 512:
       print('Dimensions mismatch for {}'.format(test_id))
       continue
-
+    min_val = dicom_arr.min()
+    if min_val < 0:
+      dicom_arr = dicom_arr - min_val # Shift data to make min == 0
+    dicom_arr = crop_dataset(dicom_arr)
+    dicom_shape = dicom_arr.shape
     out_mask  = np.zeros(dicom_shape, np.uint8)
 
     inference_req_shape = (dicom_shape[0],1,dicom_shape[1], dicom_shape[2])
@@ -138,10 +165,10 @@ with tf.device(device):
     out_file_name = out_folder + test_id + '_pred_mask.nrrd'
     out_file_name = path.abspath(out_file_name)
     sitk.WriteImage(sitk.GetImageFromArray(out_mask), out_file_name, False)
-
+    # Write cropped DICOM array as well
     out_file_name = out_folder + test_id + '_dicom.nrrd'
     out_file_name = path.abspath(out_file_name)
     dicom_arr = np.squeeze(dicom_arr, axis=1)
     sitk.WriteImage(sitk.GetImageFromArray(dicom_arr), out_file_name, False)
-
 print('Done')
+
