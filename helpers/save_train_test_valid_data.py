@@ -10,13 +10,13 @@ Created on Fri Mar 22 11:58:38 2019
 @author: ndahiya, aloksh
 """
 import os
+import shutil
 import SimpleITK as sitk
 
 def saveData(dset_id_list, fold_type):
   # Load DICOM and masks
-  in_base_dir  = '/home/ndahiya/school/MICCAI-Challanges/kits-2019-kidney-challenge/kits19/data'
-  out_base_dir = '/home/ndahiya/school/MICCAI-Challanges/kits-2019-kidney-challenge/kits-2019-miccai-challenge/resources/training_data'
-
+  in_base_dir  = '/home/alok/projects/kits19/data'
+  out_base_dir = '/home/alok/projects/kits-2019-miccai-challenge/resources/training_data'
   for dset_id in dset_id_list:
     # Read dicom and mask image
 
@@ -26,15 +26,12 @@ def saveData(dset_id_list, fold_type):
     print (dicom_name)
     print(mask_name)
 
-    dicom_itk = sitk.ReadImage(dicom_name)
-    mask_itk  = sitk.ReadImage(mask_name)
-
-    out_dicom_name = os.path.join(out_base_dir, fold_type, dset_id + '_dicom.nrrd')
-    out_mask_name  = os.path.join(out_base_dir, fold_type, dset_id + '_seg_mask.nrrd')
+    out_dicom_name = os.path.join(out_base_dir, fold_type, dset_id + '_dicom.nii.gz')
+    out_mask_name  = os.path.join(out_base_dir, fold_type, dset_id + '_seg_mask.nii.gz')
 
     # Save dicom and mask into corresponding folder.
-    sitk.WriteImage(dicom_itk, out_dicom_name)
-    sitk.WriteImage(mask_itk, out_mask_name)
+    shutil.copy(dicom_name, out_dicom_name)
+    shutil.copy(mask_name, out_mask_name)
 
   print ('Done writing ' + fold_type + ' data')
 

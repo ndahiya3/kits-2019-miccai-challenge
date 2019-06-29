@@ -47,9 +47,9 @@ parser.add_argument("--valid_in_dir", help="Directory location of validation dat
 # Class labels
 
 
-parser.set_defaults(out_dir='unet_tversky_full_cropped',
-                    train_dsets_num=105,
-                    valid_dsets_num=31,
+parser.set_defaults(out_dir='unet_tversky_mini',
+                    train_dsets_num=10,
+                    valid_dsets_num=3,
                     classes_to_keep=[1,2],
                     train_ids_file='train_ids.txt',
                     valid_ids_file='valid_ids.txt',
@@ -88,20 +88,20 @@ valid_out_masks_dir = os.path.abspath(valid_out_masks_dir)
 
 
 # Extract training data
-#extract_data(train_ids_file, train_in_dir, train_out_dicom_dir,
-#             train_out_masks_dir, train_dsets_to_extract,
-#             convert_masks_to_binary, classes_to_keep,
-#             extract_only_with_foreground)
-extract_cropped_kidney_data(train_ids_file, train_in_dir, train_out_dicom_dir,
-             train_out_masks_dir, train_dsets_to_extract,
-             convert_masks_to_binary, classes_to_keep,
-             extract_only_with_foreground)
+extract_data(train_ids_file, train_in_dir, train_out_dicom_dir,
+            train_out_masks_dir, train_dsets_to_extract,
+            convert_masks_to_binary, classes_to_keep,
+            extract_only_with_foreground)
+# extract_cropped_kidney_data(train_ids_file, train_in_dir, train_out_dicom_dir,
+#              train_out_masks_dir, train_dsets_to_extract,
+#              convert_masks_to_binary, classes_to_keep,
+#              extract_only_with_foreground)
 # Extract validation data
-#extract_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
-#             valid_out_masks_dir, valid_dsets_to_extract,
-#             convert_masks_to_binary, classes_to_keep,
-#             extract_only_with_foreground)
-extract_cropped_kidney_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
-             valid_out_masks_dir, valid_dsets_to_extract,
-             convert_masks_to_binary, classes_to_keep,
-             extract_only_with_foreground)
+extract_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
+            valid_out_masks_dir, valid_dsets_to_extract,
+            convert_masks_to_binary, classes_to_keep,
+            extract_only_with_foreground)
+# extract_cropped_kidney_data(valid_ids_file, valid_in_dir, valid_out_dicom_dir,
+#              valid_out_masks_dir, valid_dsets_to_extract,
+#              convert_masks_to_binary, classes_to_keep,
+#              extract_only_with_foreground)
