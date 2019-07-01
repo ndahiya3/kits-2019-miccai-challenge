@@ -20,10 +20,10 @@ parser.add_argument("--num_epochs", help="Number of training epochs to run.",
 parser.add_argument("--num_classes", help="Number of object classes.",
                     type=int)
 
-parser.set_defaults(curr_exp_name='unet_tversky_mini',
+parser.set_defaults(curr_exp_name='enet_tversky_full',
                     batch_size=8,
                     num_epochs=50,
-                    num_classes=3)
+                    num_classes=2)
 
 args = parser.parse_args()
 

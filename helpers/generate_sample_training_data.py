@@ -365,8 +365,8 @@ def extract_data(dset_ids_file, in_dir_path,
         if extract_only_with_foreground == True and nnz == 0:
           continue
 
-        np.savez(curr_dicom_frame_path, np_arr_dicom[:, :, frame].T)
-        np.savez(curr_mask_frame_path, np_arr_mask[:, :, frame].T)
+        np.savez(curr_dicom_frame_path, A=np_arr_dicom[:, :, frame].T)
+        np.savez(curr_mask_frame_path, A=np_arr_mask[:, :, frame].T)
         extracted_frames += 1
 
     print("\tExtracted {} frames".format(extracted_frames))

@@ -15,8 +15,15 @@ import SimpleITK as sitk
 
 def saveData(dset_id_list, fold_type):
   # Load DICOM and masks
-  in_base_dir  = '/home/alok/projects/kits19/data'
-  out_base_dir = '/home/alok/projects/kits-2019-miccai-challenge/resources/training_data'
+
+  # Alok Directory paths
+  #in_base_dir  = '/home/alok/projects/kits19/data'
+  #out_base_dir = '/home/alok/projects/kits-2019-miccai-challenge/resources/training_data'
+
+  # Navdeep Directory paths
+  in_base_dir  = '/home/ndahiya/school/MICCAI-Challanges/kits-2019-kidney-challenge/kits19/data'
+  out_base_dir = '/home/ndahiya/school/MICCAI-Challanges/kits-2019-kidney-challenge/kits-2019-miccai-challenge/resources/training_data'
+
   for dset_id in dset_id_list:
     # Read dicom and mask image
 

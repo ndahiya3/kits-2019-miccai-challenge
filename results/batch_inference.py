@@ -17,14 +17,23 @@ from os import path
 import numpy as np
 import tensorflow as tf
 import SimpleITK as sitk
-
+from keras import backend as K
 import sys
 sys.path.insert(0, path.abspath('..'))
 import helpers.utilities as utils
-from models.unet_model_dilated_conv import unet_model_dilated_conv
-from models.unet_model_deeper_dilated_conv import unet_model_deeper_dilated_conv
+#from models.unet_model_dilated_conv import unet_model_dilated_conv
+#from models.unet_model_deeper_dilated_conv import unet_model_deeper_dilated_conv
+from models.enet_model import enet_model
+
+def batch_mean_normalize(batch_data):
+  # Batch normalize a batch of 2D slices
+  batch_mean = batch_data.mean()
+  batch_data = batch_data - batch_mean
+  batch_data = batch_data/(batch_data.var()**0.5)
+
+  return batch_data
 # Use this if running with default arguments
-exp_name_default="tversky_full_lr_pt4"
+exp_name_default="enet_tversky_full"
 
 parser = argparse.ArgumentParser(description="This script runs inference using "
                                  "a pretrained model on a set of "
@@ -55,7 +64,7 @@ parser.set_defaults(curr_exp_name=exp_name_default,
                     num_dsets=74,
                     test_data_location="../resources/training_data/test/",
                     model_name='models/unet_' + exp_name_default + '.hdf5',
-                    num_classes=3,
+                    num_classes=2,
                     batch_size=160,
                     gpu_device='/gpu:0')
 args = parser.parse_args()
@@ -81,13 +90,14 @@ model_name = path.abspath(model_name)
 with tf.device(device):
   #model = unet_model_tack_arch(model_name, num_classes=nb_classes)
   #model = unet_model_dilated_conv(model_name, num_classes=nb_classes)
-  model = unet_model_dilated_conv(model_name, num_classes=nb_classes)
+  #model = unet_model_dilated_conv(model_name, num_classes=nb_classes)
+  model = enet_model(model_name)
   #model.summary()
 
   # Predict and save all test datasets
   for idx, test_id in enumerate(test_list):
     print('Processing {}: {} of {}'.format(test_id, idx+1, nb_dsets_to_run))
-    curr_test_dicom_name = test_data_location + test_id + '_dicom.nrrd'
+    curr_test_dicom_name = test_data_location + test_id + '_dicom.nii.gz'
     curr_test_dicom_name = path.abspath(curr_test_dicom_name)
 
     dicom = sitk.ReadImage(curr_test_dicom_name)
@@ -99,8 +109,9 @@ with tf.device(device):
     num_frames = dicom_arr.shape[0]
     for idx in range(num_frames):
       dicom_arr[idx] = dicom_arr[idx].T
-    min_val = dicom_arr.min()
-    dicom_arr = dicom_arr - min_val
+
+    # Mean normalize
+    dicom_arr = batch_mean_normalize(dicom_arr)
 
     dicom_shape = dicom_arr.shape
     if dicom_shape[1] != 512 or dicom_shape[2] != 512:
@@ -109,7 +120,10 @@ with tf.device(device):
 
     out_mask  = np.zeros(dicom_shape, np.uint8)
 
-    inference_req_shape = (dicom_shape[0],1,dicom_shape[1], dicom_shape[2])
+    if K.image_data_format() == 'channels_first':
+      inference_req_shape = (dicom_shape[0],1,dicom_shape[1], dicom_shape[2])
+    else:
+      inference_req_shape = (dicom_shape[0],dicom_shape[1], dicom_shape[2],1)
     dicom_arr = np.reshape(dicom_arr, inference_req_shape) # Hardcoded input shape
     if dicom_shape[0] < 160:
       batch_size = dicom_shape[0]
@@ -122,6 +136,7 @@ with tf.device(device):
       start_idx = idx
       end_idx   = idx + batch_size
       result = model.predict(dicom_arr[start_idx:end_idx,...], verbose=1)
+      print(result.shape)
       if nb_classes == 1:
         pred_labels = np.squeeze(result, axis=1)
         #print(pred_labels.max())
@@ -130,7 +145,7 @@ with tf.device(device):
         pred_labels = pred_labels.astype(np.uint8)
         #print(np.count_nonzero(pred_labels))
       else:
-        pred_labels = result.argmax(axis=1)
+        pred_labels = result.argmax(axis=3)
         pred_labels = pred_labels.astype(np.uint8)
       # Copy predicted slices
       out_mask[start_idx:end_idx] = pred_labels
@@ -141,7 +156,7 @@ with tf.device(device):
 
     out_file_name = out_folder + test_id + '_dicom.nrrd'
     out_file_name = path.abspath(out_file_name)
-    dicom_arr = np.squeeze(dicom_arr, axis=1)
+    dicom_arr = np.squeeze(dicom_arr, axis=3)
     sitk.WriteImage(sitk.GetImageFromArray(dicom_arr), out_file_name, False)
 
 print('Done')

@@ -11,14 +11,16 @@ before calling this train file.
 """
 
 import os
-from models.unet_model_dilated_conv import unet_model_dilated_conv
-from models.unet_model_deeper_dilated_conv import unet_model_deeper_dilated_conv
-from models.unet_model_3d_tack_arch import unet_model_3d_tack_arch
+#from models.unet_model_dilated_conv import unet_model_dilated_conv
+#from models.unet_model_deeper_dilated_conv import unet_model_deeper_dilated_conv
+#from models.unet_model_3d_tack_arch import unet_model_3d_tack_arch
+from models.enet_model import enet_model
 
 from models.keras_generate_training_data import training_data_generator
 from models.keras_generate_training_data import validation_data_generator
 from models.keras_generate_training_data import data_generator_3d
-from resources.keras_generate_training_data import data_generator
+#from models.keras_generate_training_data import data_generator
+from models.data_generator import DataGenerator
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.callbacks import TensorBoard, ReduceLROnPlateau
@@ -49,7 +51,7 @@ def train(train_dir, valid_dir, save_aug_dir, batch_size, model_save_path,
         total_num_augmentations = 6
         train_steps_per_epoch = total_frames // batch_size
         train_steps_per_epoch = train_steps_per_epoch * total_num_augmentations
-        train_steps_per_epoch = train_steps_per_epoch // 3
+        train_steps_per_epoch = train_steps_per_epoch // 6
     else:  # No augmentations for 3D network
         train_steps_per_epoch = total_frames // batch_size
 
@@ -69,14 +71,14 @@ def train(train_dir, valid_dir, save_aug_dir, batch_size, model_save_path,
         #                   horizontal_flip=True,
         #                   fill_mode='nearest')
 
-        img_generator = data_generator(train_dir, 'dicoms', 'masks', num_classes=num_classes, batch_size=batch_size)
+        img_generator = DataGenerator(train_dir, 'dicoms', 'masks', n_classes=num_classes, batch_size=batch_size)
         # Validation images generator if valid_images dir path specified
         valid_generator = None
         if valid_dir is not None:
-            valid_generator = data_generator(valid_dir, 'dicoms', 'masks', num_classes=num_classes, batch_size=batch_size)
+            valid_generator = DataGenerator(valid_dir, 'dicoms', 'masks', n_classes=num_classes, batch_size=batch_size)
             # model = unet_model_deeper_dilated_conv(pretrained_model_path, num_classes=num_classes)
-        model = unet_model_dilated_conv(pretrained_model_path, num_classes=num_classes,
-                                            input_size=(1, 512, 512))
+        #model = unet_model_dilated_conv(pretrained_model_path, num_classes=num_classes, input_size=(1, 512, 512))
+        model = enet_model()
     else:
         img_generator = data_generator_3d(train_dir, 'dicoms', 'masks', batch_size)
         valid_generator = None

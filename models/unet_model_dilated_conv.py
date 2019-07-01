@@ -105,7 +105,7 @@ def unet_model_dilated_conv(pretrained_weights=None, input_size = (1,512,512),
   model = Model(inputs=input_img, outputs=conv2d_15)
 
   if num_classes > 1:
-    track_metrics = [dice_1, dice_2]#, dice_3, dice_4]
+    track_metrics = [dice_1]#, dice_3, dice_4]
     #model.compile(optimizer=Adam(lr=1e-4), loss=my_categorical_crossentropy, metrics=track_metrics)
     #model.compile(optimizer=Adam(lr=1e-6), loss=mc_generalized_dice_loss, metrics=track_metrics)
     model.compile(optimizer=Adam(lr=1e-5), loss=mc_tversky_loss, metrics=track_metrics)

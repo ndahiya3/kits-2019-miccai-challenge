@@ -28,7 +28,7 @@ parser.add_argument("--valid_dsets_num", help="Number of validation datasets to 
 parser.add_argument("--classes_to_keep", help="Class labels to keep [combined or separate].",
                     type=int, nargs='*')
 parser.add_argument("--convert_masks_to_binary", help="Combine Class labels to keep to one foreground mask?",
-                    action='store_true')
+                    action='store_false')
 parser.add_argument("--train_ids_file", help="Text file with list of train datasets OAI ids.",
                     type=str)
 parser.add_argument("--valid_ids_file", help="Text file with list of validation datasets OAI ids.",
@@ -47,9 +47,9 @@ parser.add_argument("--valid_in_dir", help="Directory location of validation dat
 # Class labels
 
 
-parser.set_defaults(out_dir='unet_tversky_mini',
-                    train_dsets_num=10,
-                    valid_dsets_num=3,
+parser.set_defaults(out_dir='enet_tversky_full',
+                    train_dsets_num=105,
+                    valid_dsets_num=31,
                     classes_to_keep=[1,2],
                     train_ids_file='train_ids.txt',
                     valid_ids_file='valid_ids.txt',
